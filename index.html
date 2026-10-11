@@ -114,6 +114,8 @@
 <body>
 <main>
   <header><div class="logo">T</div><div><h1>TWK Finance</h1><div class="muted">Personal & cargo business money tracker</div></div></header>
+  <section id="homePage">
+  <div class="panel" style="margin-bottom:14px"><label for="date" style="margin-top:0">Date</label><input id="date" type="date" required></div>
   <section class="balance">
     <div class="label">Current balance</div><div class="amount" id="balance">0 Ks</div>
     <div class="label" id="periodLabel">This month · net cash flow</div>
@@ -126,9 +128,8 @@
     <h2>Add transaction</h2>
     <div class="switch"><button id="incomeBtn" class="active" type="button">＋ Income</button><button id="expenseBtn" type="button">− Expense</button></div>
     <form id="entryForm">
-      <div class="two">
-        <div><label for="amount">Amount (MMK)</label><input id="amount" type="number" min="1" step="1" placeholder="50000" required></div>
-        <div><label for="date">Date</label><input id="date" type="date" required></div>
+      <div>
+        <label for="amount">Amount (MMK)</label><input id="amount" type="number" min="1" step="1" placeholder="50000" required>
       </div>
       <label for="category">Category</label>
       <select id="category">
@@ -138,10 +139,15 @@
       <button class="primary" type="submit">Save transaction</button>
     </form>
   </section>
+  </section>
+
+  <section id="reportPage" hidden>
   <section class="panel history">
     <h2>Transactions <span class="muted" id="count"></span></h2>
     <label for="filterDate">View transactions for date</label><input id="filterDate" type="date">
     <div id="entries"></div>
+  </section>
+
   </section>
 
   <section class="panel menu-panel" id="menuPanel" hidden>
@@ -299,29 +305,22 @@ $("restoreBtn").addEventListener("click",()=>{
   };
   reader.readAsText(file);
 });
-function setActiveNav(activeId){
+function showPage(page){
+  $("homePage").hidden = page !== "home";
+  $("reportPage").hidden = page !== "report";
+  $("menuPanel").hidden = page !== "menu";
   ["navHome","navMenu","navReport"].forEach(id=>{
-    $(id).classList.toggle("active",id===activeId);
+    $(id).classList.toggle("active",
+      (page==="home" && id==="navHome") ||
+      (page==="menu" && id==="navMenu") ||
+      (page==="report" && id==="navReport"));
   });
-  $("navMenu").setAttribute("aria-expanded", String(!$("menuPanel").hidden));
-}
-$("navHome").addEventListener("click",()=>{
-  $("menuPanel").hidden=true;
-  setActiveNav("navHome");
+  $("navMenu").setAttribute("aria-expanded", String(page === "menu"));
   window.scrollTo({top:0,behavior:"smooth"});
-});
-$("navMenu").addEventListener("click",()=>{
-  $("menuPanel").hidden=!$("menuPanel").hidden;
-  setActiveNav($("menuPanel").hidden ? "navHome" : "navMenu");
-  if(!$("menuPanel").hidden){
-    $("menuPanel").scrollIntoView({behavior:"smooth",block:"start"});
-  }
-});
-$("navReport").addEventListener("click",()=>{
-  $("menuPanel").hidden=true;
-  setActiveNav("navReport");
-  document.querySelector(".history").scrollIntoView({behavior:"smooth",block:"start"});
-});
+}
+$("navHome").addEventListener("click",()=>showPage("home"));
+$("navMenu").addEventListener("click",()=>showPage("menu"));
+$("navReport").addEventListener("click",()=>showPage("report"));
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}
 render();
 </script>
