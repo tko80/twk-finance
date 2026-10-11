@@ -30,6 +30,24 @@
     label{display:block;color:#aab6c9;font-size:12px;margin:12px 0 6px}
     input,select,textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;background:#0e1726;border:1px solid #304057;color:#f5f7fb;border-radius:12px;padding:12px;font:inherit;outline:none}
     input[type="date"],input[type="month"],input[type="number"]{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;margin:0;padding:12px;appearance:none;-webkit-appearance:none}
+    /* Date controls intentionally have no surrounding box/border */
+    input#date,input#filterDate{
+      display:block !important;
+      width:100% !important;
+      max-width:100% !important;
+      min-width:0 !important;
+      box-sizing:border-box !important;
+      margin:0 !important;
+      padding:8px 0 !important;
+      border:0 !important;
+      outline:0 !important;
+      border-radius:0 !important;
+      box-shadow:none !important;
+      background:transparent !important;
+      -webkit-appearance:none !important;
+      appearance:none !important;
+      color:#f5f7fb !important;
+    }
     .two,.switch{min-width:0;width:100%;max-width:100%}
     .two{grid-template-columns:repeat(2,minmax(0,1fr))}
     .two>div{min-width:0;max-width:100%;width:100%}
