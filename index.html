@@ -52,6 +52,17 @@
     <div class="tile"><div class="muted">Income this month</div><div class="value green" id="income">0 Ks</div></div>
     <div class="tile"><div class="muted">Expenses this month</div><div class="value red" id="expense">0 Ks</div></div>
   </section>
+  <section class="panel" style="margin-bottom:18px">
+    <h2>Backup & Export</h2>
+    <div class="muted">Keep a safe copy of your records. Store backup files somewhere private.</div>
+    <div class="two" style="margin-top:12px">
+      <button class="primary" id="backupBtn" type="button" style="margin-top:0">Download Backup</button>
+      <button class="primary" id="csvBtn" type="button" style="margin-top:0;background:#26364b;color:#f5f7fb">Export CSV</button>
+    </div>
+    <input id="restoreFile" type="file" accept=".json,application/json" style="margin-top:12px">
+    <button class="primary" id="restoreBtn" type="button" style="margin-top:8px;background:#26364b;color:#f5f7fb">Restore Backup</button>
+    <div class="foot">Backup creates a private JSON file. CSV opens in spreadsheet apps. Restore replaces the records currently stored on this device.</div>
+  </section>
   <section class="panel">
     <h2>Add transaction</h2>
     <div class="switch"><button id="incomeBtn" class="active" type="button">＋ Income</button><button id="expenseBtn" type="button">− Expense</button></div>
@@ -120,6 +131,42 @@ function render(){
   $("entries").querySelectorAll(".delete").forEach(b=>b.addEventListener("click",()=>{if(confirm("Delete this transaction?")){records=records.filter(r=>r.id!==b.dataset.id);save();}}));
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+$("backupBtn").addEventListener("click",()=>{
+  const payload={app:"TWK Finance",version:1,exportedAt:new Date().toISOString(),records};
+  downloadFile("twk-finance-backup-"+localDate+".json",JSON.stringify(payload,null,2),"application/json");
+});
+$("csvBtn").addEventListener("click",()=>{
+  const quote = v => '"' + String(v ?? "").replace(/"/g,'""') + '"';
+  const rows=[["Date","Type","Category","Amount_MMK","Note"],...records.map(r=>[r.date,r.kind,r.category,r.amount,r.note||""])];
+  const csv="\uFEFF"+rows.map(row=>row.map(quote).join(",")).join("\r\n");
+  downloadFile("twk-finance-transactions-"+localDate+".csv",csv,"text/csv;charset=utf-8");
+});
+$("restoreBtn").addEventListener("click",()=>{
+  const file=$("restoreFile").files[0];
+  if(!file){alert("Choose a TWK Finance JSON backup file first.");return;}
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const parsed=JSON.parse(reader.result);
+      const incoming=Array.isArray(parsed)?parsed:parsed.records;
+      if(!Array.isArray(incoming) || !incoming.every(r=>r && typeof r==="object" && ["income","expense"].includes(r.kind) && Number.isFinite(Number(r.amount)) && r.date)){
+        alert("This backup file is not valid TWK Finance data.");return;
+      }
+      if(confirm("Restore this backup? It will replace the records currently stored on this device.")){
+        records=incoming.map(r=>({id:String(r.id||Date.now().toString(36)+Math.random().toString(36).slice(2,7)),kind:r.kind,amount:Number(r.amount),date:String(r.date),category:String(r.category||"Other"),note:String(r.note||"")}));
+        save(); alert("Backup restored successfully.");
+      }
+    }catch(e){alert("Could not read this backup file.");}
+  };
+  reader.readAsText(file);
+});
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}
 render();
 </script>
